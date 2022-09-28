@@ -97,7 +97,7 @@ local function initializeTelemetry()
 		)	
 	end)
 end
-hook.Add("OnWUMALoaded", "WUMAInitializeTelemetry", function() pcall(initializeTelemetry) end)
+--hook.Add("OnWUMALoaded", "WUMAInitializeTelemetry", function() pcall(initializeTelemetry) end)
 
 local cacheCounter = 0
 local cacheSize = 20
