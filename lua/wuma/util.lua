@@ -55,50 +55,6 @@ function WUMA.STCache(id, data)
 	end
 end
 
-local function sendTelemetry(success, failure)
-	local type = "listen"
-	if game.IsDedicated() then 
-		type = "dedicated"
-	elseif game.SinglePlayer() then
-		type = "singleplayer"
-	end
-
-	local body = {
-		ip = game.GetIPAddress(),
-		name = GetHostName(),
-		type = type
-	}
-
-	HTTP{
-		url = "http://wuma.rahka.net/api/telemetry",
-		method = "PUT",
-		type = "application/json",
-		body = util.TableToJSON(body, true),
-		success = success,
-		failed = failure
-	}
-end
-
-local function initializeTelemetry()
-	timer.Simple(30, function() --HTTP fails if we try to run it too early
-		pcall(
-			sendTelemetry, 
-
-			--Called on success
-			function() 
-				WUMADebug("Sucessfully sent telemetry, creating timer")
-				timer.Create("WUMATelemetryTimer", 3600 * 6, 0, function() pcall(sendTelemetry) end)
-			end,
-
-			--Called on failure
-			function(message) 
-				WUMADebug("Failed to send telemetry (%s)", tostring(message))
-			end
-		)	
-	end)
-end
---hook.Add("OnWUMALoaded", "WUMAInitializeTelemetry", function() pcall(initializeTelemetry) end)
-
 local cacheCounter = 0
 local cacheSize = 20
 local head
@@ -109,21 +65,21 @@ function WUMA.Cache(id, data)
 			head = {id = id, data = data, next = nil}
 			tail = head
 			cacheCounter = cacheCounter + 1
-		else 
+		else
 			local link = {id = id, data = data, next = head}
 			head = link
 			cacheCounter = cacheCounter + 1
 		end
-		
+
 		if (cacheCounter >= cacheSize) then
 			local counter = 0
 			local l = head
 			while l do
 				if (counter > cacheSize - 2) then
-					l.next = nil	
+					l.next = nil
 					l = nil
 					cacheCounter = counter
-				else 
+				else
 					l = l.next
 					counter = counter + 1
 				end
@@ -141,14 +97,14 @@ function WUMA.Cache(id, data)
 				end
 				return link.data --Return the data
 			end
-			
+
 			previous = link --Set previous to current link
 			link = link.next --Set current link to next link
 		end
 	end
 end
 
-function WUMA.InvalidateCache(id) 
+function WUMA.InvalidateCache(id)
 	if not head then return end
 	local link = head
 	local previous
@@ -156,7 +112,7 @@ function WUMA.InvalidateCache(id)
 		if (link.id == id) then
 			if (previous) then
 				previous.next = link.next
-			else 
+			else
 				head = head.next
 			end
 			cacheCounter = cacheCounter - 1
@@ -167,3 +123,35 @@ function WUMA.InvalidateCache(id)
 		end
 	end
 end
+
+function WUMA.TransferRestrictions( oldgroup, newgroup )
+	for _, res in pairs( WUMA.GetSavedRestrictions() ) do
+		local usergroup = res:GetUserGroup()
+		if usergroup == oldgroup then
+			WUMA.AddRestriction( _, newgroup, res:GetType(), res:GetString(), res:GetAllow(), res:GetScope() )
+			res:Shred()
+		end
+	end
+
+	for _, limit in pairs( WUMA.GetSavedLimits() ) do
+		local usergroup = limit:GetUserGroup()
+		if usergroup == oldgroup then
+			WUMA.AddLimit( _, newgroup, limit:GetString(), limit:Get(), limit:IsExclusive(), limit:GetScope() )
+			limit:Shred()
+		end
+	end
+
+	for enum, tbl in pairs( WUMA.GetSavedInheritance() ) do
+		for parent, child in pairs( tbl ) do
+			if parent == oldgroup then
+				WUMA.SetUsergroupInheritance( enum, newgroup, child )
+				WUMA.UnsetUsergroupInheritance( enum, oldgroup )
+			end
+		end
+	end
+end
+
+hook.Add( ULib.HOOK_GROUP_RENAMED, "WUMA_AutoTransferRanks", function( oldgroup, newgroup )
+	WUMA.Log.ServerLog( "Transferring limits, restrictions and inheritance from " .. oldgroup .. " to " .. newgroup .. "." )
+	WUMA.TransferRestrictions( oldgroup, newgroup )
+end )
