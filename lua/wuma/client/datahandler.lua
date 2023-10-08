@@ -48,7 +48,7 @@ function WUMA.ProcessDataUpdate(id, data)
 	if (id == Limit:GetID()) then
 		WUMA.UpdateLimits(data)
 	end
-	
+
 	local private = string.find(id, ":::")
 	if private then
 		WUMA.UpdateUser(string.sub(id, private+3), string.sub(id, 1, private-1), data)
@@ -62,7 +62,7 @@ function WUMA.ProcessCompressedData(id, data, await, index)
 	if await or compressedBuffer[id] then
 		hook.Call(WUMA.PROGRESSUPDATE, _, id, "Recieving data ("..index..")")
 	end
-	
+
 	if compressedBuffer[id] then
 		compressedBuffer[id] = compressedBuffer[id] .. data
 		if not await then
@@ -79,61 +79,61 @@ function WUMA.ProcessCompressedData(id, data, await, index)
 	WUMADebug("Processing compressed data. Size: %s", string.len(data))
 
 	hook.Call(WUMA.PROGRESSUPDATE, _, id, "Decompressing data")
-	
-	local uncompressed_data = util.Decompress(data) 
-	
+
+	local uncompressed_data = util.Decompress(data)
+
 	if not uncompressed_data then
-		WUMADebug("Failed to uncompress data! Size: %s", string.len(data)) 
+		WUMADebug("Failed to uncompress data! Size: %s", string.len(data))
 		hook.Call(WUMA.PROGRESSUPDATE, _, id, "Decompress failed! Flush data and try again")
 		return
-	end 
+	end
 	WUMADebug("Data sucessfully decompressed. Size: %s", string.len(uncompressed_data))
-	
+
 	local tbl = util.JSONToTable(uncompressed_data)
-	
+
 	WUMA.ProcessDataUpdate(id, tbl)
 end
 
 function WUMA.UpdateRestrictions(update)
 
 	for id, tbl in pairs(update) do
-		if istable(tbl) then 
-			tbl = Restriction:new(tbl)	
-			WUMA.Restrictions[id] = tbl	
+		if istable(tbl) then
+			tbl = Restriction:new(tbl)
+			WUMA.Restrictions[id] = tbl
 		else
-			WUMA.Restrictions[id] = nil	
+			WUMA.Restrictions[id] = nil
 		end
-		
+
 		update[id] = tbl
 	end
-	
+
 	hook.Call(WUMA.RESTRICTIONUPDATE, _, update)
 end
 
 function WUMA.UpdateLimits(update)
 
 	for id, tbl in pairs(update) do
-		if istable(tbl) then 
-			tbl = Limit:new(tbl)	
-			WUMA.Limits[id] = tbl			
-		else 
+		if istable(tbl) then
+			tbl = Limit:new(tbl)
+			WUMA.Limits[id] = tbl
+		else
 			WUMA.Limits[id] = nil
 		end
-			
+
 		update[id] = tbl
 	end
-	
+
 	hook.Call(WUMA.LIMITUPDATE, _, update)
 
 end
 
 function WUMA.UpdateUser(id, enum, data)
 	WUMA.UserData[id] = WUMA.UserData[id] or {}
-	
+
 	if (enum == Restriction:GetID()) then
 		WUMA.UpdateUserRestrictions(id, data)
 	end
-		
+
 	if (enum == Limit:GetID()) then
 		WUMA.UpdateUserLimits(id, data)
 	end
@@ -143,19 +143,19 @@ function WUMA.UpdateUserRestrictions(user, update)
 	WUMA.UserData[user].Restrictions = WUMA.UserData[user].Restrictions or {}
 
 	for id, tbl in pairs(update) do
-		if istable(tbl) then 
-			tbl = Restriction:new(tbl)	
+		if istable(tbl) then
+			tbl = Restriction:new(tbl)
 			tbl.usergroup = user
 			tbl.parent = user
-			
-			WUMA.UserData[user].Restrictions[id] = tbl	
-		else 
-			WUMA.UserData[user].Restrictions[id] = nil	
+
+			WUMA.UserData[user].Restrictions[id] = tbl
+		else
+			WUMA.UserData[user].Restrictions[id] = nil
 		end
-		
+
 		update[id] = tbl
 	end
-	
+
 	hook.Call(WUMA.USERDATAUPDATE, _, user, Restriction:GetID(), update)
 end
 
@@ -163,21 +163,21 @@ function WUMA.UpdateUserLimits(user, update)
 	WUMA.UserData[user].Limits = WUMA.UserData[user].Limits or {}
 
 	for id, tbl in pairs(update) do
-		if istable(tbl) then 
-			tbl = Limit:new(tbl)	
+		if istable(tbl) then
+			tbl = Limit:new(tbl)
 			tbl.parent = user
 			tbl.usergroup = user
-			
-			WUMA.UserData[user].Limits[id] = tbl	
+
+			WUMA.UserData[user].Limits[id] = tbl
 		else
-			WUMA.UserData[user].Limits[id] = nil	
+			WUMA.UserData[user].Limits[id] = nil
 		end
-		
-		update[id] = tbl	
+
+		update[id] = tbl
 	end
 
 	hook.Call(WUMA.USERDATAUPDATE, _, user, Limit:GetID(), update)
-	
+
 end
 
 --Information update
@@ -186,7 +186,7 @@ function WUMA.ProcessInformationUpdate(enum, data)
 
 	if WUMA.GetStream(enum) then
 		WUMA.GetStream(enum)(data)
-	else	
+	else
 		WUMADebug("NET STREAM enum not found! (%s)", tostring(enum))
 	end
 end
@@ -194,11 +194,11 @@ end
 local DisregardSettingsChange = false
 function WUMA.UpdateSettings(settings)
 	DisregardSettingsChange = true
-	
+
 	if (WUMA.GUI.Tabs.Settings) then
 		WUMA.GUI.Tabs.Settings:UpdateSettings(settings)
 	end
-	
+
 	DisregardSettingsChange = false
 end
 hook.Add(WUMA.SETTINGSUPDATE, "WUMAGUISettings", function(settings) WUMA.UpdateSettings(settings) end)
@@ -209,7 +209,7 @@ function WUMA.OnSettingsUpdate(setting, value)
 
 		local access = "changesettings"
 		local data = {setting, value}
-		 
+
 		WUMA.SendCommand(access, data, true)
 	end
 end
@@ -226,10 +226,10 @@ hook.Add(WUMA.INHERITANCEUPDATE, "WUMAGUIInheritance", function(settings) WUMA.U
 function WUMA.OnInheritanceUpdate(enum, target, usergroup)
 	if not WUMA.GUI.Tabs.Settings.DisregardInheritanceChange then
 		local access = "changeinheritance"
-			
+
 		if (string.lower(usergroup) == "nobody") then usergroup = nil end
 		local data = {enum, target, usergroup}
-		 
+
 		WUMA.SendCommand(access, data, true)
 	end
 end
