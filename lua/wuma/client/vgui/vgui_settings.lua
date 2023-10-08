@@ -293,12 +293,6 @@ function PANEL:PerformLayout(w, h)
 	self.checkbox_exclude_limits:DockMargin(5, 5, 5, 0)
 	self.checkbox_exclude_limits:Dock(TOP)
 
-	self.chat_command:SetTall(22)
-	self.chat_command:DockMargin(5, 5, 5, 5)
-	self.chat_command:Dock(BOTTOM)
-	self.chat_command.textbox:SetWide(self.echo_changes:GetWide()/2)
-	self.chat_command.textbox:SetPos(self.echo_changes:GetWide()-self.echo_changes.combobox:GetWide(), 0)
-
 	self.adv_settings:SetPos(0, self:GetTall()/2+3)
 	self.adv_settings:SetSize(self:GetWide()/2-3, self:GetWide()/2-3)
 
