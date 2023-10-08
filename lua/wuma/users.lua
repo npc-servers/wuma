@@ -6,8 +6,6 @@ local WUMALog = WUMALog
 WUMA.Users = {}
 WUMA.UserLimitsCache = {}
 
-WUMA.PersonalLoadoutCommand = WUMA.CreateConVar("wuma_personal_loadout_chatcommand", "!loadout", FCVAR_ARCHIVE, "Chat command to open the loadout selector")
-
 function WUMA.InitializeUser(user)
 	WUMA.AssignRestrictions(user)
 	WUMA.AssignLimits(user)
@@ -18,7 +16,6 @@ end
 function WUMA.AssignUserRegulations(user)
 	WUMA.AssignUserRestrictions(user)
 	WUMA.AssignUserLimits(user)
-	WUMA.AssignUserLoadout(user)
 end
 
 function WUMA.AssignRestrictions(user, usergroup)
@@ -89,28 +86,6 @@ function WUMA.AssignUserLimits(user)
 	end
 end
 
-function WUMA.AssignLoadout(user, usergroup)
-	WUMA.AssignUsergroupLoadout(user, usergroup)
-	WUMA.AssignUserLoadout(user)
-end
-
-function WUMA.AssignUsergroupLoadout(user, usergroup)
-	local usergroup = usergroup or user:GetUserGroup()
-
-	if not(WUMA.Loadouts[usergroup]) then return end
-
-	local loadout = WUMA.Loadouts[usergroup]:Clone()
-
-	user:SetLoadout(loadout)
-end
-
-function WUMA.AssignUserLoadout(user)
-	if WUMA.HasPersonalLoadout(user) then
-		local tbl = WUMA.GetSavedLoadout(user)
-		user:SetLoadout(tbl)
-	end
-end
-
 function WUMA.UpdateUsergroup(group, func)
 	local players = WUMA.GetUsers(group)
 	if not players then return {} end
@@ -127,15 +102,12 @@ function WUMA.GetUserData(user, typ)
 
 	local restrictions = false
 	local limits = false
-	local loadout = false
 
 	if typ then
 		if (typ == Restriction:GetID() and WUMA.CheckUserFileExists(user, Restriction)) then
 			return WUMA.ReadUserRestrictions(user)
 		elseif (typ == Limit:GetID() and WUMA.CheckUserFileExists(user, Limit)) then
 			return WUMA.ReadUserLimits(user)
-		elseif (typ == Loadout:GetID() and WUMA.CheckUserFileExists(user, Loadout)) then
-			return WUMA.ReadUserLoadout(user)
 		else
 			return false
 		end
@@ -143,15 +115,13 @@ function WUMA.GetUserData(user, typ)
 
 	if WUMA.CheckUserFileExists(user, Restriction) then restrictions = WUMA.ReadUserRestrictions(user) end
 	if WUMA.CheckUserFileExists(user, Limit) then limits = WUMA.ReadUserLimits(user) end
-	if WUMA.CheckUserFileExists(user, Loadout) then loadout = WUMA.ReadUserLoadout(user) end
 
-	if not restrictions and not limits and not loadout then return false end
+	if not restrictions and not limits then return false end
 
 	return {
 		steamid = user,
 		restrictions = restrictions,
-		limits = limits,
-		loadout = loadout
+		limits = limits
 	}
 end
 
@@ -226,25 +196,6 @@ function WUMA.ShowWUMAMenu(ply, cmd, args)
 end
 concommand.Add( "wuma_menu", WUMA.ShowWUMAMenu)
 
-function WUMA.ShowPersonalLoadout(ply, cmd, args)
-	WUMA.HasAccess(ply, function(bool)
-		if bool then
-			ply:SendLua([[WUMA.GUI.CreateLoadoutSelector()]])
-		else
-			ply:ChatPrint("You do not have access to this command")
-		end
-	end, "wuma personalloadout")
-end
-concommand.Add("wuma_loadout", WUMA.ShowPersonalLoadout)
-
-function WUMA.UserChatCommand(user, text, public)
-	if (text == WUMA.PersonalLoadoutCommand:GetString()) then
-		user:SendLua([[WUMA.GUI.CreateLoadoutSelector()]])
-		return ""
-	end
-end
-hook.Add("PlayerSay", "WUMAChatCommand", WUMA.UserChatCommand)
-
 function WUMA.UserDisconnect(user)
 	WUMA.GetAuthorizedUsers(function(users) WUMA.GetStream("users"):Send(users) end)
 
@@ -257,15 +208,6 @@ function WUMA.UserDisconnect(user)
 	WUMA.AddLookup(user)
 end
 hook.Add("PlayerDisconnected", "WUMAPlayerDisconnected", WUMA.UserDisconnect)
-
-function WUMA.PlayerLoadout(user)
-	if not user.InitalLoadoutCheck then
-		WUMA.AssignLoadout(user)
-		user.InitalLoadoutCheck = true
-	end
-	return user:GiveLoadout()
-end
-hook.Add("PlayerLoadout", "WUMAPlayerLoadout", WUMA.PlayerLoadout)
 
 function WUMA.PlayerInitialSpawn(user)
 	ProtectedCall( function()
@@ -280,7 +222,6 @@ hook.Add("PlayerInitialSpawn", "WUMAPlayerInitialSpawn", WUMA.PlayerInitialSpawn
 function WUMA.PlayerUsergroupChanged(user, old, new, source)
 	WUMA.RefreshGroupRestrictions(user,new)
 	WUMA.RefreshGroupLimits(user,new)
-	WUMA.RefreshLoadout(user,new)
 end
 hook.Add("CAMI.PlayerUsergroupChanged", "WUMAPlayerUsergroupChanged", WUMA.PlayerUsergroupChanged)
 

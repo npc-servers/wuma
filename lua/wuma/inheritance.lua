@@ -32,8 +32,6 @@ function WUMA.SetUsergroupInheritance(enum, target, usergroup)
 			WUMA.RefreshGroupRestrictions(user, target)
 		elseif (enum == Limit:GetID()) then
 			WUMA.RefreshGroupLimits(user, target)
-		elseif (enum == Loadout:GetID()) then
-			WUMA.RefreshUsergroupLoadout(user, target)
 		end
 	end)
 			
@@ -44,8 +42,6 @@ function WUMA.SetUsergroupInheritance(enum, target, usergroup)
 					WUMA.RefreshGroupRestrictions(user, heir)
 				elseif (enum == Limit:GetID()) then
 					WUMA.RefreshGroupLimits(user, heir)
-				elseif (enum == Loadout:GetID()) then
-					WUMA.RefreshUsergroupLoadout(user, heir)
 				end
 			end)
 			recursive(WUMA.GetUsergroupHeirs(enum, heir))
@@ -71,8 +67,6 @@ function WUMA.UnsetUsergroupInheritance(enum, target)
 			WUMA.RefreshGroupRestrictions(user, target)
 		elseif (enum == Limit:GetID()) then
 			WUMA.RefreshGroupLimits(user, target)
-		elseif (enum == Loadout:GetID()) then
-			WUMA.RefreshUsergroupLoadout(user, target)
 		end
 	end)
 			
@@ -83,8 +77,6 @@ function WUMA.UnsetUsergroupInheritance(enum, target)
 					WUMA.RefreshGroupRestrictions(user, heir)
 				elseif (enum == Limit:GetID()) then
 					WUMA.RefreshGroupLimits(user, heir)
-				elseif (enum == Loadout:GetID()) then
-					WUMA.RefreshUsergroupLoadout(user, heir)
 				end
 			end)
 			recursive(WUMA.GetUsergroupHeirs(enum, heir))

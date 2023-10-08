@@ -12,8 +12,6 @@ function WUMA.GetSavedTable(enum, user)
 		return WUMA.GetSavedRestrictions(user)
 	elseif (enum == Limit) then
 		return WUMA.GetSavedLimits(user)
-	elseif (enum == Loadout) then
-		return WUMA.GetSavedLoadouts(user)
 	end
 end
 
@@ -109,7 +107,6 @@ function WUMA.RemoveClientUpdateUser(user)
 	
 	WUMA.RemoveDataSubscription(user, Restriction:GetID())
 	WUMA.RemoveDataSubscription(user, Limit:GetID())
-	WUMA.RemoveDataSubscription(user, Loadout:GetID())
 	
 	user = user:SteamID()
 	
@@ -126,7 +123,6 @@ end
 hook.Add("PlayerDisconnected", "WUMADataHandlerPlayerDisconnected", WUMA.RemoveClientUpdateUser, 0)
 
 function WUMA.SendData(user)
- 
 	if WUMA.Files.Exists(WUMA.DataDirectory.."restrictions.txt") then
 		WUMA.SendCompressedData(user, WUMA.GetSavedRestrictions(), Restriction:GetID())
 	end
@@ -134,11 +130,6 @@ function WUMA.SendData(user)
 	if WUMA.Files.Exists(WUMA.DataDirectory.."limits.txt") then
 		WUMA.SendCompressedData(user, WUMA.GetSavedLimits(), Limit:GetID())
 	end
-
-	if WUMA.Files.Exists(WUMA.DataDirectory.."loadouts.txt") then
-		WUMA.SendCompressedData(user, WUMA.GetSavedLoadouts(), Loadout:GetID())
-	end
-	
 end
 
 --Client updates
@@ -351,8 +342,6 @@ function WUMA.GetUserFile(user, enum)
 		return WUMA.DataDirectory..WUMA.UserDataDirectory..folder.."restrictions.txt"
 	elseif (enum == Limit or enum == Limit:GetID()) then
 		return WUMA.DataDirectory..WUMA.UserDataDirectory..folder.."limits.txt"
-	elseif (enum == Loadout or enum == Loadout:GetID()) then
-		return WUMA.DataDirectory..WUMA.UserDataDirectory..folder.."loadouts.txt"
 	end
 end
 
@@ -364,7 +353,7 @@ function WUMA.DeleteUserFile(user, enum)
 	WUMA.Files.Delete(WUMA.GetUserFile(user, enum))
 
 	timer.Simple(2, function()
-		if not WUMA.CheckUserFileExists(user, Restriction) and not WUMA.CheckUserFileExists(user, Limit) and not WUMA.CheckUserFileExists(user, Loadout) then
+		if not WUMA.CheckUserFileExists(user, Restriction) and not WUMA.CheckUserFileExists(user, Limit) then
 			WUMA.DeleteUserFolder(user)
 		end
 	end)

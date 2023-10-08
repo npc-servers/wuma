@@ -118,13 +118,12 @@ end
 function ENT:GetWUMAData()
 	return {
 		restrictions = self:GetRestrictions() or false,
-		limits = self:GetLimits() or false,
-		loadout = self:GetLoadout() or false
+		limits = self:GetLimits() or false
 	}
 end
 
 function ENT:HasWUMAData()
-	if (self:GetRestrictions() or self:GetLimits() or self:GetLoadout()) then return true else return false end
+	if (self:GetRestrictions() or self:GetLimits() ) then return true else return false end
 end
 
 function ENT:CheckRestriction(type, str)
@@ -301,73 +300,6 @@ function ENT:CacheLimits()
 		end
 	end
 	self:SetLimitCache(cache)
-end
-
-function ENT:GiveLoadout()
-	if self:HasLoadout() then
-		self:GetLoadout():Give()
-
-		if self:GetLoadout():GetEnforce() then
-			return true
-		elseif self:GetLoadout():GetAncestor() and self:GetLoadout():GetAncestor():GetEnforce() then
-			return true
-		else
-			if (self:GetLoadout():GetPrimary()) then
-				self:ConCommand(string.format("cl_defaultweapon %s"), self:GetLoadout():GetPrimary())
-			end
-		end
-	end
-end
-
-function ENT:SetPrimaryWeapon(weapon)
-	if self:HasLoadout() then
-		self:GetLoadout():SetPrimaryWeapon(weapon)
-	end
-end
-
-function ENT:SetLoadout(loadout)
-	loadout:SetParent(self)
-	if self:HasLoadout() and not self:GetLoadout():IsPersonal() then
-		loadout:SetAncestor(self:GetLoadout())
-	end
-	self.Loadout = loadout
-end
-
-function ENT:ClearLoadout()
-	if (self.Loadout and self.Loadout:IsPersonal()) then
-		if (self.Loadout:GetAncestor()) then
-			local ancestor = self.Loadout:GetAncestor()
-
-			self.Loadout = ancestor
-			ancestor.child = nil
-
-			self.Loadout:Give()
-		else
-			self.Loadout:Delete()
-			self.Loadout = nil
-
-			WUMA.GiveLoadout(self)
-		end
-	elseif self.Loadout then
-		self.Loadout:Delete()
-		self.Loadout = nil
-
-		WUMA.GiveLoadout(self)
-	end
-end
-
-function ENT:HasLoadout()
-	if self:GetLoadout() then
-		if self:GetLoadout():IsDisabled() then
-			return false
-		end
-		return true
-	end
-	return false
-end
-
-function ENT:GetLoadout()
-	return self.Loadout
 end
 
 ENT.DisregardTable = {}

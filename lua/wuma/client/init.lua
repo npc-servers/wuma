@@ -22,8 +22,6 @@ function WUMA.Initialize()
 	include("wuma/objects/access.lua")
 	include("wuma/objects/stream.lua")
 	include("wuma/objects/scope.lua")
-	include("wuma/objects/loadout.lua")
-	include("wuma/objects/loadout_weapon.lua")
 	include("wuma/objects/restriction.lua")
 	include("wuma/objects/limit.lua")
 
