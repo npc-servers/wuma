@@ -46,26 +46,6 @@ function PANEL:Init()
 	self.checkbox_exclude_limits:SetValue(false)
 	self.checkbox_exclude_limits.OnChange = function(panel, bool) WUMA.OnSettingsUpdate("exclude_limits", bool) end
 
-	self.chat_command = vgui.Create("DPanel", self.server_settings)
-	self.chat_command.Paint = function(panel, w, h) draw.DrawText("Loadout chat command", "DermaDefault", 0, h/2-7, Color(0, 0, 0), TEXT_ALIGN_LEFT) end
-	self.chat_command.textbox = vgui.Create("DTextEntry", self.chat_command)
-	local old_setvalue = self.chat_command.textbox.SetValue
-	self.chat_command.textbox.SetValue = function(panel, value)
-		panel.previousValue = value
-		old_setvalue(panel, value)
-	end
-	local old_losefocus = self.chat_command.textbox.OnLoseFocus
-	self.chat_command.textbox.OnLoseFocus = function(panel)
-		old_losefocus(panel)
-
-		local str = panel:GetValue()
-		if (str ~= "") then
-			WUMA.OnSettingsUpdate("personal_loadout_chatcommand", panel:GetValue())
-		else
-			timer.Simple(0.01, function() panel:SetValue(panel.previousValue) end)
-		end
-	end
-
 	self.adv_settings = vgui.Create("DPanel", self)
 
 	self.adv_settings.header = vgui.Create("DPanel", self.adv_settings)
@@ -438,12 +418,6 @@ function PANEL:UpdateInheritance(inheritance)
 							self.inheritance_restriction.combobox:ChooseOptionID(k)
 						end
 					end
-				elseif (enum == Loadout:GetID()) then
-					for k, v in pairs(self.inheritance_loadout.combobox.Choices) do
-						if (v == usergroup) then
-							self.inheritance_loadout.combobox:ChooseOptionID(k)
-						end
-					end
 				elseif (enum == Limit:GetID()) then
 					for k, v in pairs(self.inheritance_limit.combobox.Choices) do
 						if (v == usergroup) then
@@ -463,7 +437,6 @@ function PANEL:UpdateSettings(settings)
 	self.net_send_size.wang:SetValue(tonumber(settings.net_send_size))
 	self.data_save_delay.wang:SetValue(tonumber(settings.data_save_delay))
 	self.checkbox_echo_chat:SetValue(tonumber(settings.echo_to_chat))
-	self.chat_command.textbox:SetValue(settings.personal_loadout_chatcommand)
 	self.checkbox_exclude_limits:SetValue(tonumber(settings.exclude_limits))
 end
 

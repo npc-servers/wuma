@@ -34,12 +34,6 @@ function PANEL:Init()
 	self.button_limits.DoClick = self.OnLimitsClick
 	self.button_limits:SetDisabled(true)
 
-	--Loadouts button
-	self.button_loadouts = vgui.Create("DButton", self)
-	self.button_loadouts:SetText("Loadouts")
-	self.button_loadouts.DoClick = self.OnLoadoutsClick
-	self.button_loadouts:SetDisabled(true)
-
 	--Items list
 	self.list_items = vgui.Create("WDataView", self)
 	self.list_items:SetMultiSelect(false)
@@ -149,63 +143,6 @@ function PANEL:Init()
 		end
 	end)
 
-	--Loadouts panel
-	self.loadouts = vgui.Create("WUMA_Loadouts", self)
-	self.loadouts:SetVisible(false)
-	self.loadouts.list_usergroups:SetVisible(false)
-	self.loadouts.GetSelectedUsergroups = function()
-		return {self:GetSelectedUser()}
-	end
-	self.loadouts.GetCurrentLoadout = function()
-		if (WUMA.UserData[self:GetSelectedUser()]) then
-			return WUMA.UserData[self:GetSelectedUser()].Loadouts
-		end
-	end
-
-
-	self.loadouts.Command.Add = "adduserloadout"
-	self.loadouts.Command.Delete = "removeuserloadout"
-	self.loadouts.Command.Edit = "adduserloadout"
-	self.loadouts.Command.Clear = "clearuserloadout"
-	self.loadouts.Command.Primary = "setuserprimaryweapon"
-	self.loadouts.Command.Enforce = "setuserenforceloadout"
-
-	local display = function(data)
-		local scope = "Permanent"
-		if data.scope then scope = data.scope end
-
-		local nick = "ERROR"
-		if WUMA.LookupUsers[data.usergroup] then nick = WUMA.LookupUsers[data.usergroup].nick elseif WUMA.ServerUsers[data.usergroup] then nick = WUMA.ServerUsers[data.usergroup]:Nick() end
-
-		local secondary = data.secondary or -1
-		if (secondary < 0) then
-			secondary = "def"
-		end
-
-		local primary = data.primary or -1
-		if (primary < 0) then
-			primary = "def"
-		end
-
-		return {nick, data.print or data.class, primary, secondary, scope}, {0, _, -(data.primary or 0), -(data.secondary or 0)}
-	end
-	self.loadouts:GetDataView():SetDisplayFunction(display)
-
-	local sort = function(data)
-		return self:GetSelectedUser()
-	end
-	self.loadouts:GetDataView():SetSortFunction(sort)
-
-	WUMA.GUI.AddHook(WUMA.USERDATAUPDATE, "WUMAUsersLoadoutUpdate", function(user, type, update)
-		if (user == self:GetSelectedUser()) and (type == Loadout:GetID()) then
-			if not (self.loadouts:GetDataView():GetDataTable() == WUMA.UserData[self:GetSelectedUser()].LoadoutWeapons) then
-				self.loadouts:GetDataView():SetDataTable(function() return WUMA.UserData[self:GetSelectedUser()].LoadoutWeapons end)
-			else
-				self.loadouts:GetDataView():UpdateDataTable(update)
-			end
-		end
-	end)
-
 	--User label
 	self.label_user = vgui.Create("DLabel", self)
 	self.label_user:SetText("NO_USER")
@@ -275,20 +212,14 @@ function PANEL:PerformLayout()
 		self.button_back:SetSize(70, self.textbox_search:GetTall())
 		self.button_back:SetPos(self:GetWide()+5, 5)
 
-		self.button_loadouts:SetSize(70, self.textbox_search:GetTall())
-		self.button_loadouts:SetPos(self:GetWide()-self.button_loadouts:GetWide()-5, 5)
-
 		self.button_limits:SetSize(50, self.textbox_search:GetTall())
-		self.button_limits:SetPos(self.button_loadouts.x-self.button_limits:GetWide()-5, 5)
+		self.button_limits:SetPos(self.button_back.x-self.button_limits:GetWide()-5, 5)
 
 		self.button_restrictions:SetSize(80, self.textbox_search:GetTall())
 		self.button_restrictions:SetPos(self.button_limits.x-self.button_restrictions:GetWide()-5, 5)
 
 		self.limits:SetSize(self:GetWide(), self:GetTall()-25)
 		self.limits:SetPos(self:GetWide(), 25)
-
-		self.loadouts:SetSize(self:GetWide(), self:GetTall()-25)
-		self.loadouts:SetPos(self:GetWide(), 25)
 
 		self.restrictions:SetSize(self:GetWide(), self:GetTall()-25)
 		self.restrictions:SetPos(self:GetWide(), 25)
@@ -311,20 +242,14 @@ function PANEL:PerformLayout()
 		self.button_back:SetSize(70, self.textbox_search:GetTall())
 		self.button_back:SetPos(self:GetWide()+5-offset, 5)
 
-		self.button_loadouts:SetSize(70, self.textbox_search:GetTall())
-		self.button_loadouts:SetPos(self:GetWide()-self.button_loadouts:GetWide()-5-offset, 5)
-
 		self.button_limits:SetSize(50, self.textbox_search:GetTall())
-		self.button_limits:SetPos(self.button_loadouts.x-self.button_limits:GetWide()-5-offset, 5)
+		self.button_limits:SetPos(self.button_back.x-self.button_limits:GetWide()-5-offset, 5)
 
 		self.button_restrictions:SetSize(80, self.textbox_search:GetTall())
 		self.button_restrictions:SetPos(self.button_limits.x-self.button_restrictions:GetWide()-5-offset, 5)
 
 		self.limits:SetSize(self:GetWide(), self:GetTall()-25)
 		self.limits:SetPos(self:GetWide()-offset, 25)
-
-		self.loadouts:SetSize(self:GetWide(), self:GetTall()-25)
-		self.loadouts:SetPos(self:GetWide()-offset, 25)
 
 		self.restrictions:SetSize(self:GetWide(), self:GetTall()-25)
 		self.restrictions:SetPos(self:GetWide()-offset, 25)
@@ -400,7 +325,6 @@ function PANEL:OnUserSelected(this)
 	self = self:GetParent()
 
 	self.button_restrictions:SetDisabled(false)
-	self.button_loadouts:SetDisabled(false)
 	self.button_limits:SetDisabled(false)
 end
 
@@ -410,7 +334,6 @@ end
 function PANEL:OnRestrictionsClick()
 	self = self:GetParent()
 
-	self.loadouts:SetVisible(false)
 	self.limits:SetVisible(false)
 
 	self.restrictions:SetVisible(true)
@@ -431,7 +354,6 @@ end
 function PANEL:OnLimitsClick()
 	self = self:GetParent()
 
-	self.loadouts:SetVisible(false)
 	self.restrictions:SetVisible(false)
 
 	self.limits:SetVisible(true)
@@ -449,37 +371,14 @@ function PANEL:OnLimitsClick()
 	self:ToggleExtra()
 end
 
-function PANEL:OnLoadoutsClick()
-	self = self:GetParent()
-
-	self.restrictions:SetVisible(false)
-	self.limits:SetVisible(false)
-
-	self.loadouts:SetVisible(true)
-
-	WUMA.UserData[self:GetSelectedUser()] = WUMA.UserData[self:GetSelectedUser()] or {}
-	WUMA.UserData[self:GetSelectedUser()].LoadoutWeapons = WUMA.UserData[self:GetSelectedUser()].LoadoutWeapons or {}
-
-	self.loadouts:GetDataView():SetDataTable(function() return WUMA.UserData[self:GetSelectedUser()].LoadoutWeapons end)
-	self.loadouts:GetDataView():Show(self:GetSelectedUser())
-
-	self.loadouts.Command.DataID = Loadout:GetID() .. ":::" .. self:GetSelectedUser()
-
-	self:OnExtraChange(Loadout:GetID(), self:GetSelectedUser())
-
-	self:ToggleExtra()
-end
-
 function PANEL:OnBackClick()
 	self = self:GetParent()
 
 	self.restrictions:SetVisible(false)
 	self.limits:SetVisible(false)
-	self.loadouts:SetVisible(false)
 
 	self.restrictions:GetDataView():SetDataTable(function() return {} end)
 	self.limits:GetDataView():SetDataTable(function() return {} end)
-	self.loadouts:GetDataView():SetDataTable(function() return {} end)
 
 	self:OnExtraChange("default", self:GetSelectedUser())
 
@@ -509,7 +408,6 @@ function PANEL:OnItemChange(lineid, line)
 
 	self.restrictions.Command.DataID = Restriction:GetID()..":::"..self:GetSelectedUser()
 	self.limits.Command.DataID = Limit:GetID()..":::"..self:GetSelectedUser()
-	self.loadouts.Command.DataID = Loadout:GetID()..":::"..self:GetSelectedUser()
 end
 
 vgui.Register("WUMA_Users", PANEL, 'DPanel');

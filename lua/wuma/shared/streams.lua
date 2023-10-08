@@ -20,8 +20,7 @@ Settings:SetServerFunction(function(user, data)
 	local metadata = {
 		wuma_server_time=os.time(),
 		wuma_limit_count=table.Count(WUMA.Limits),
-		wuma_restriction_count=table.Count(WUMA.Restrictions),
-		wuma_loadout_count=table.Count(WUMA.Loadouts)
+		wuma_restriction_count=table.Count(WUMA.Restrictions)
 	}
 	
 	return {user, Settings, table.Merge(WUMA.ConVars.Settings, metadata)}
@@ -226,81 +225,6 @@ Limits:SetServerFunction(function(user, data)
 end) 
 Limits:SetAuthenticationFunction(function(user, callback) 
 	WUMA.HasAccess(user, callback)
-end)
-
-local Loadouts = WUMA.RegisterStream{name="loadouts", send=WUMA.SendCompressedData}
-Loadouts:SetServerFunction(function(user, data)
-	if data[1] then
-		if WUMA.CheckUserFileExists(data[1], Loadout) then
-			local tbl = WUMA.GetSavedLoadouts(data[1])
-			return {user, tbl, Loadout:GetID()..":::"..data[1]}
-		else
-			return {user, {}, Loadout:GetID()..":::"..data[1]}
-		end
-	else
-		if WUMA.LoadoutsExist() then
-			local cached = WUMA.Cache(Loadout:GetID())
-			if not cached then
-				cached = util.Compress(util.TableToJSON(WUMA.Loadouts))
-				WUMA.Cache(Loadout:GetID(), cached)
-			end
-			return {user, cached, Loadout:GetID(), true}
-		else
-			return {user, {}, Loadout:GetID()}
-		end
-	end
-end) 
-Loadouts:SetAuthenticationFunction(function(user, callback) 
-	WUMA.HasAccess(user, callback)
-end)
-
-local Personal = WUMA.RegisterStream{name="personal", send=WUMA.SendCompressedData}
-Personal:SetServerFunction(function(user, data)
-	if (data[1] == "subscribe") then
-		WUMA.AddDataSubscription(user, user:SteamID(), Loadout:GetID())
-		
-		hook.Add(WUMA.USERRESTRICTIONADDED, WUMA.USERRESTRICTIONADDED .. "_" .. user:AccountID(), function(hook_user, restriction) 
-			if (user == hook_user) and (restriction:GetType() == "swep") then
-				local tbl = {}
-				tbl[restriction:GetID(true)] = restriction
-				
-				local id = "PersonalLoadoutRestrictions:::" .. user:SteamID()
-				
-				WUMA.PoolFunction("SendPersonalCompressedData" .. "_" .. user:AccountID(), WUMA.SendCompressedData, tbl, {user, _, id}, 2)
-			end
-		end)
-		
-		hook.Add(WUMA.USERRESTRICTIONREMOVED, WUMA.USERRESTRICTIONREMOVED .. "_" .. user:AccountID(), function(hook_user, restriction) 
-			if (user == hook_user) and (restriction:GetType() == "swep") then
-				local tbl = {}
-				tbl[restriction:GetID(true)] = WUMA.DELETE
-				
-				local id = "PersonalLoadoutRestrictions:::" .. user:SteamID()
-				
-				WUMA.PoolFunction("SendPersonalCompressedData" .. "_" .. user:AccountID(), WUMA.SendCompressedData, tbl, {user, _, id}, 2)			
-			end
-		end)
-	elseif (data[1] == "unsubscribe") then 
-		WUMA.RemoveDataSubscription(user, user:SteamID(), user:SteamID())
-	
-		hook.Remove(WUMA.USERRESTRICTIONADDED, WUMA.USERRESTRICTIONADDED .. user:AccountID())
-		hook.Remove(WUMA.USERRESTRICTIONREMOVED, WUMA.USERRESTRICTIONADDED .. user:AccountID())
-	elseif (data[1] == "restrictions") then
-		local restrictions = {}
-		for id, restriction in pairs(user:GetRestrictions() or {}) do
-			if (restriction:GetType() == "swep") then
-				restrictions[restriction:GetID(true)] = restriction
-			end
-		end
-		return {user, restrictions, "PersonalLoadoutRestrictions:::"..user:SteamID()}
-	elseif (data[1] == "loadouts") then
-		if user:HasLoadout() then
-			Loadouts:Send(user, {user:SteamID()})
-		end
-	end
-end) 
-Personal:SetAuthenticationFunction(function(user, callback) 
-	WUMA.HasAccess(user, callback, "wuma personalloadout")
 end)
 
 local RestrictionItems = WUMA.RegisterStream{name="restrictionitems", send=WUMA.SendInformation}

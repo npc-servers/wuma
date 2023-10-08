@@ -46,7 +46,6 @@ function WUMA.Initialize()
 	include(WUMA.HomeDirectory.."users.lua")
 	include(WUMA.HomeDirectory.."limits.lua")
 	include(WUMA.HomeDirectory.."restrictions.lua")
-	include(WUMA.HomeDirectory.."loadouts.lua")
 	include(WUMA.HomeDirectory.."inheritance.lua")
 	include(WUMA.HomeDirectory.."hooks.lua")
 	include(WUMA.HomeDirectory.."duplicator.lua")
@@ -67,7 +66,6 @@ function WUMA.Initialize()
 	--Load data
 	WUMA.LoadRestrictions()
 	WUMA.LoadLimits()
-	WUMA.LoadLoadouts()
 	WUMA.LoadInheritance()
 
 	--Load shared files
