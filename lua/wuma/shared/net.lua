@@ -90,9 +90,12 @@ if SERVER then
 		WUMADebug("Command recieved!(SIZE: %s bits)", lenght)
 
 		local len = net.ReadUInt(32)
+		if len > 10000 then return end
 		local data = net.ReadData(len)
 
 		local tbl = util.JSONToTable(util.Decompress(data))
+		if not tbl then return end
+
 		local cmd = tbl[1]
 
 		--WUMADebug(cmd)
