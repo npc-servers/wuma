@@ -125,6 +125,10 @@ if SERVER then
 		net.Start("WUMAInformationStream")
 			net.WriteString(name)
 			net.WriteTable(data)
+			local json = util.TableToJSON(data)
+			local compressed = util.Compress(json)
+			net.WriteUInt(#compressed, 32)
+			net.WriteData(compressed, #compressed)
 		net.Send(user)
 	end
 
@@ -151,7 +155,11 @@ else
 	--RECIVE INFORMATION
 	function WUMA.RecieveInformation(length, ply)
 		local name = net.ReadString()
-		local data = net.ReadTable()
+
+		local compressed_length = net.ReadUInt(32)
+		local compressed_data = net.ReadData(compressed_length)
+		local json = util.Decompress(compressed_data)
+		local data = util.JSONToTable(json)
 
 		WUMADebug("Information recieved! (NAME: %s) (SIZE: %s bits)", tostring(name), tostring(length))
 
