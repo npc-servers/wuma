@@ -124,7 +124,6 @@ if SERVER then
 
 		net.Start("WUMAInformationStream")
 			net.WriteString(name)
-			net.WriteTable(data)
 			local json = util.TableToJSON(data)
 			local compressed = util.Compress(json)
 			net.WriteUInt(#compressed, 32)
